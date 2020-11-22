@@ -24,4 +24,10 @@ public abstract class NBTWrappedElement<T> extends NamedNBTElement
     {
         this.value = value;
     }
+
+    @Override
+    public String toString()
+    {
+        return getType().name() + (name == null ? ": " : "('" + name + "'): ") + value;
+    }
 }

@@ -183,4 +183,28 @@ public final class NBTList extends NamedNBTElement implements List<NBTElement>
     {
         return elements.subList(i, i1);
     }
+
+    @Override
+    public String toString()
+    {
+        StringBuilder builder = new StringBuilder(getType().name()).append("(").append(listType.name()).append(")");
+        if(name == null)
+            builder.append(": {\n");
+        else
+            builder.append("('").append(name).append("'): {\n");
+
+        for(NBTElement element : elements)
+        {
+            String elementAsString = element.toString();
+            String[] lines;
+            if(elementAsString.contains("\n"))
+                lines = element.toString().split("\n");
+            else
+                lines = new String[]{elementAsString};
+            for(String line : lines)
+                builder.append("  ").append(line).append("\n");
+        }
+
+        return builder.append("}").toString();
+    }
 }

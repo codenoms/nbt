@@ -25,6 +25,11 @@ public final class NBTCompound extends NamedNBTElement
         this.elementMap = elementMap;
     }
 
+    public boolean hasElement(String name)
+    {
+        return elementMap.containsKey(name);
+    }
+
     public NamedNBTElement getElement(String name)
     {
         return elementMap.get(name);
@@ -167,5 +172,27 @@ public final class NBTCompound extends NamedNBTElement
     public Set<NamedNBTElement> getElements()
     {
         return new LinkedHashSet<>(elementMap.values());
+    }
+
+    @Override
+    public String toString()
+    {
+        StringBuilder builder = new StringBuilder("COMPOUND");
+        if(name == null)
+            builder.append(": {\n");
+        else
+            builder.append("('").append(name).append("'): {\n");
+        for(NamedNBTElement element : elementMap.values())
+        {
+            String elementAsString = element.toString();
+            String[] lines;
+            if(elementAsString.contains("\n"))
+                lines = element.toString().split("\n");
+            else
+                lines = new String[]{elementAsString};
+            for(String line : lines)
+                builder.append("  ").append(line).append("\n");
+        }
+        return builder.append("}").toString();
     }
 }
