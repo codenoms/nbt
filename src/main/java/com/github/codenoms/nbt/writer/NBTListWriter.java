@@ -1,20 +1,33 @@
 package com.github.codenoms.nbt.writer;
 
-import com.github.codenoms.nbt.NBTElement;
-import com.github.codenoms.nbt.NBTList;
+import com.github.codenoms.nbt.TypedList;
+import com.github.codenoms.nbt.reader.NBTListReader;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public final class NBTListWriter implements NBTElementWriter<NBTList>
+public final class NBTListWriter implements NBTWriter<TypedList>
 {
+    private final NBTWritingContext context;
+
+    public NBTListWriter()
+    {
+        this(NBTWritingContext.getDefaultContext());
+    }
+
+    public NBTListWriter(NBTWritingContext context)
+    {
+        this.context = context;
+    }
+
     @Override
     @SuppressWarnings("unchecked")
-    public void writeElement(NBTList element, DataOutputStream stream) throws IOException
+    public void writeAsNBTData(TypedList element, DataOutputStream stream) throws IOException
     {
-        stream.writeByte(element.getListType().ordinal());
+        stream.writeByte(context.getIndexByType(element.getListType()));
         stream.writeInt(element.size());
-        for(NBTElement child : element)
-            ((NBTElementWriter<NBTElement>) element.getListType().getWriter()).writeElement(child, stream);
+        NBTWriter<Object> writer = context.getWriterByType(element.getListType());
+        for(Object child : element)
+            writer.writeAsNBTData(child, stream);
     }
 }

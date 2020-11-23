@@ -1,23 +1,38 @@
 package com.github.codenoms.nbt.reader;
 
 import com.github.codenoms.nbt.NBTCompound;
-import com.github.codenoms.nbt.NBTElement;
-import com.github.codenoms.nbt.NBTType;
-import com.github.codenoms.nbt.NamedNBTElement;
+import com.github.codenoms.nbt.NBTAdapter;
 
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
-public final class NBTCompoundReader implements NBTElementReader<NBTCompound>
+public final class NBTCompoundReader implements NBTReader<NBTCompound>
 {
-    @Override
-    public NBTCompound readElement(DataInputStream stream) throws IOException
+    private final NBTReadingContext context;
+
+    public NBTCompoundReader()
     {
-        NBTCompound compound = new NBTCompound();
-        NBTElement element;
-        while((element = GenericNBTReader.INSTANCE.readElement(stream)).getType() != NBTType.END)
-            if(element instanceof NamedNBTElement)
-                compound.addElement((NamedNBTElement) element);
+        this(NBTReadingContext.getDefaultContext());
+    }
+
+    public NBTCompoundReader(NBTReadingContext context)
+    {
+        this.context = context;
+    }
+
+    @Override
+    public NBTCompound readFromNBTData(DataInputStream stream) throws IOException
+    {
+        NBTCompound compound = new NBTCompound(new HashMap<>(context.getDefaultAdapters()));
+        byte index;
+        while((index = stream.readByte()) != 0)
+        {
+            byte[] nameBytes = new byte[stream.readUnsignedShort()];
+            stream.readFully(nameBytes);
+            compound.set(new String(nameBytes, StandardCharsets.UTF_8), context.getReaderByIndex(index).readFromNBTData(stream));
+        }
         return compound;
     }
 }

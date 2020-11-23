@@ -1,55 +1,63 @@
 package com.github.codenoms.nbt;
 
-import com.github.codenoms.nbt.reader.NBTElementReader;
-import com.github.codenoms.nbt.reader.NamePrefixReader;
-import com.github.codenoms.nbt.writer.NBTElementWriter;
-import com.github.codenoms.nbt.writer.NamePrefixWriter;
-import com.github.codenoms.nbt.writer.TypePrefixWriter;
+import com.github.codenoms.nbt.reader.NBTCompoundReader;
+import com.github.codenoms.nbt.writer.NBTCompoundWriter;
+import com.github.codenoms.nbt.writer.NBTWritingContext;
 
 import java.io.*;
-import java.util.zip.DeflaterOutputStream;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
-import java.util.zip.InflaterInputStream;
+import java.util.zip.*;
 
 public final class NBT
 {
-    @SuppressWarnings("unchecked")
-    public static NBTCompound read(InputStream inputStream) throws IOException
+    public static NBTCompound readNBT(DataInputStream stream) throws IOException
     {
-        DataInputStream stream = new DataInputStream(inputStream);
+        // skip root type, we assume it is a compound tag
+        stream.readByte();
 
-        NBTType type = NBTType.getByOrdinal(stream.readByte());
-        if(type != NBTType.COMPOUND)
-            throw new IllegalArgumentException("read type was not a compound nbt");
+        // skip name, we don't use it
+        byte[] nameBytes = new byte[stream.readUnsignedShort()];
+        stream.readFully(nameBytes);
 
-        return new NamePrefixReader<>((NBTElementReader<NBTCompound>) type.getReader()).readElement(stream);
+        return new NBTCompoundReader().readFromNBTData(stream);
     }
 
-    public static NBTCompound readAsGZip(InputStream stream) throws IOException
+    public static NBTCompound readNBT(InputStream stream, NBTCompression compression) throws IOException
     {
-        return read(new GZIPInputStream(stream));
+        switch(compression)
+        {
+            case GZIP -> stream = new GZIPInputStream(stream);
+            case ZLIB -> stream = new InflaterInputStream(stream);
+        }
+
+        if(stream instanceof DataInputStream)
+            return readNBT((DataInputStream) stream);
+        else
+            return readNBT(new DataInputStream(stream));
     }
 
-    public static NBTCompound readAsZLib(InputStream stream) throws IOException
+    public static void writeNBT(NBTCompound root, DataOutputStream stream) throws IOException
     {
-        return read(new InflaterInputStream(stream));
+        // write compound type index
+        stream.writeByte(NBTWritingContext.getDefaultContext().getIndexByType(NBTCompound.class));
+
+        // write name of 0 length
+        stream.writeShort(0);
+
+        new NBTCompoundWriter().writeAsNBTData(root, stream);
     }
 
-    @SuppressWarnings("unchecked")
-    public static void write(NBTCompound root, OutputStream outputStream) throws IOException
+    public static void writeNBT(NBTCompound root, OutputStream stream, NBTCompression compression) throws IOException
     {
-        new TypePrefixWriter<>(new NamePrefixWriter<>((NBTElementWriter<NBTCompound>) NBTType.COMPOUND.getWriter())).writeElement(root, new DataOutputStream(outputStream));
-    }
+        switch(compression)
+        {
+            case GZIP -> stream = new GZIPOutputStream(stream);
+            case ZLIB -> stream = new DeflaterOutputStream(stream);
+        }
 
-    public static void writeAsGZip(NBTCompound root, OutputStream outputStream) throws IOException
-    {
-        write(root, new GZIPOutputStream(outputStream));
-    }
-
-    public static void writeAsZLib(NBTCompound root, OutputStream outputStream) throws IOException
-    {
-        write(root, new DeflaterOutputStream(outputStream));
+        if(stream instanceof DataOutputStream)
+            writeNBT(root, (DataOutputStream) stream);
+        else
+            writeNBT(root, new DataOutputStream(stream));
     }
 
     private NBT() throws UnsupportedOperationException

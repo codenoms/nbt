@@ -1,21 +1,43 @@
 package com.github.codenoms.nbt.writer;
 
 import com.github.codenoms.nbt.NBTCompound;
-import com.github.codenoms.nbt.NBTEnd;
-import com.github.codenoms.nbt.NBTType;
-import com.github.codenoms.nbt.NamedNBTElement;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
-public final class NBTCompoundWriter implements NBTElementWriter<NBTCompound>
+public final class NBTCompoundWriter implements NBTWriter<NBTCompound>
 {
-    @Override
-    @SuppressWarnings("unchecked")
-    public void writeElement(NBTCompound element, DataOutputStream stream) throws IOException
+    private final NBTWritingContext context;
+
+    public NBTCompoundWriter()
     {
-        for(NamedNBTElement child : element.getElements())
-            new TypePrefixWriter<>(new NamePrefixWriter<>((NBTElementWriter<NamedNBTElement>) child.getType().getWriter())).writeElement(child, stream);
-        ((NBTElementWriter<NBTEnd>) NBTType.END.getWriter()).writeElement(NBTEnd.INSTANCE, stream);
+        this(NBTWritingContext.getDefaultContext());
+    }
+
+    public NBTCompoundWriter(NBTWritingContext context)
+    {
+        this.context = context;
+    }
+
+    @Override
+    public void writeAsNBTData(NBTCompound compound, DataOutputStream stream) throws IOException
+    {
+        for(Map.Entry<String, Object> entry : compound.entries())
+        {
+            Object value = entry.getValue();
+            stream.writeByte(context.getIndexByType(value.getClass()));
+
+            byte[] nameBytes  = entry.getKey().getBytes(StandardCharsets.UTF_8);
+            stream.writeShort(nameBytes.length);
+            stream.write(nameBytes);
+
+            @SuppressWarnings("unchecked")
+            NBTWriter<Object> writer = (NBTWriter<Object>) context.getWriterByType(value.getClass());
+            writer.writeAsNBTData(value, stream);
+        }
+        // end tag
+        stream.writeByte(0);
     }
 }

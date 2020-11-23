@@ -1,17 +1,25 @@
 package com.github.codenoms.nbt.writer;
 
-import com.github.codenoms.nbt.NBTString;
-
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-public final class NBTStringWriter implements NBTElementWriter<NBTString>
+public final class NBTStringWriter implements NBTWriter<String>
 {
-    @Override
-    public void writeElement(NBTString element, DataOutputStream stream) throws IOException
+    private static final NBTStringWriter INSTANCE = new NBTStringWriter();
+
+    public static NBTStringWriter getInstance()
     {
-        stream.writeShort(element.getValue().length());
-        stream.write(element.getValue().getBytes(StandardCharsets.UTF_8));
+        return INSTANCE;
+    }
+
+    private NBTStringWriter() {}
+
+    @Override
+    public void writeAsNBTData(String element, DataOutputStream stream) throws IOException
+    {
+        byte[] bytes = element.getBytes(StandardCharsets.UTF_8);
+        stream.writeShort(bytes.length);
+        stream.write(bytes);
     }
 }
