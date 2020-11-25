@@ -14,7 +14,6 @@ public final class NBT
         // skip root type, we assume it is a compound tag
         stream.readByte();
 
-        // skip name, we don't use it
         byte[] nameBytes = new byte[stream.readUnsignedShort()];
         stream.readFully(nameBytes);
 
@@ -58,6 +57,9 @@ public final class NBT
             writeNBT(root, (DataOutputStream) stream);
         else
             writeNBT(root, new DataOutputStream(stream));
+
+        if(compression != NBTCompression.NONE && stream instanceof DeflaterOutputStream)
+            ((DeflaterOutputStream) stream).finish();
     }
 
     private NBT() throws UnsupportedOperationException
