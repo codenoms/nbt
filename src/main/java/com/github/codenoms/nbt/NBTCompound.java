@@ -223,7 +223,7 @@ public final class NBTCompound
             if(adapter != null)
             {
                 List<T> deserializedList = list.stream()
-                                               .map((object) -> NBTCompound.class.cast(object.getClass()))
+                                               .map(NBTCompound.class::cast)
                                                .map(adapter::deserializeFromNBT)
                                                .collect(Collectors.toList());
                 return new TypedList<>(expectedListType, deserializedList);
