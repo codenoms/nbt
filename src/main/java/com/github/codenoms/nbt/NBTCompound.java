@@ -28,6 +28,21 @@ public final class NBTCompound
         adapterMap.remove(clazz);
     }
 
+    public int size()
+    {
+        return map.size();
+    }
+
+    public boolean isEmpty()
+    {
+        return size() == 0;
+    }
+
+    public boolean hasElements()
+    {
+        return size() > 0;
+    }
+
     public boolean contains(String name)
     {
         return map.containsKey(name);
@@ -208,6 +223,16 @@ public final class NBTCompound
     public void setIntArray(String name, int[] value)
     {
         set(name, value);
+    }
+
+    public TypedList<?> getList(String name)
+    {
+        return get(name, TypedList.class);
+    }
+
+    public Optional<TypedList> optList(String name)
+    {
+        return opt(name, TypedList.class);
     }
 
     public <T> TypedList<T> getList(String name, Class<T> expectedListType)
