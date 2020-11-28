@@ -13,6 +13,12 @@ public final class NBTCompound
         this(new HashMap<>());
     }
 
+    public NBTCompound(NBTCompound compound)
+    {
+        this(compound.adapterMap);
+        map.putAll(compound.map);
+    }
+
     public NBTCompound(Map<Class<?>, NBTAdapter<?>> adapterMap)
     {
         this.adapterMap = adapterMap;
@@ -46,6 +52,11 @@ public final class NBTCompound
     public boolean contains(String name)
     {
         return map.containsKey(name);
+    }
+
+    public boolean contains(String name, Class<?> expectedType)
+    {
+        return map.containsKey(name) && expectedType.isAssignableFrom(map.get(name).getClass());
     }
 
     public Set<String> keys()
@@ -223,6 +234,14 @@ public final class NBTCompound
     public void setIntArray(String name, int[] value)
     {
         set(name, value);
+    }
+
+    public boolean containsList(String name, Class<?> expectedListType)
+    {
+        if(!contains(name, TypedList.class))
+            return false;
+        Class<?> listType = getList(name).getListType();
+        return expectedListType.isAssignableFrom(listType) || (listType == NBTCompound.class && adapterMap.containsKey(expectedListType));
     }
 
     public TypedList<?> getList(String name)
