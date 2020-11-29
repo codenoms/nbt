@@ -24,8 +24,12 @@ public final class NBT
     {
         switch(compression)
         {
-            case GZIP -> stream = new GZIPInputStream(stream);
-            case ZLIB -> stream = new InflaterInputStream(stream);
+            case GZIP:
+                stream = new GZIPInputStream(stream);
+                break;
+            case ZLIB:
+                stream = new InflaterInputStream(stream);
+                break;
         }
 
         if(stream instanceof DataInputStream)
@@ -49,8 +53,12 @@ public final class NBT
     {
         switch(compression)
         {
-            case GZIP -> stream = new GZIPOutputStream(stream);
-            case ZLIB -> stream = new DeflaterOutputStream(stream);
+            case GZIP:
+                stream = new GZIPOutputStream(stream);
+                break;
+            case ZLIB:
+                stream = new DeflaterOutputStream(stream);
+                break;
         }
 
         if(stream instanceof DataOutputStream)
